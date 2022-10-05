@@ -43,7 +43,7 @@
 
 1) 
 
-![Alt text](https://github.com/Maksimyska/screen/commit/49ace54ff657326214737f8332b64cf409bc7459#diff-17feb618627a54f8ddfe568b828f7563043d78dc5b09a8495b7063adea889458)
+![Alt text](image_2022-10-05_18-22-17.png)
 
 
 ## Задание 2
