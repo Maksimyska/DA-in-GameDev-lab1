@@ -43,7 +43,7 @@
 
 1) 
 
-![Alt text](image_2022-10-05_18-22-17.png)
+![Alt text]([image_2022-10-05_18-22-17.png](https://raw.githubusercontent.com/Maksimyska/screen/49ace54ff657326214737f8332b64cf409bc7459/image_2022-10-05_18-22-17.png?token=AYSHJXL64WXD3WGA6VT4ZLLDHWDCW))
 
 
 ## Задание 2
