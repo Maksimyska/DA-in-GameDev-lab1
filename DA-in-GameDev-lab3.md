@@ -44,13 +44,13 @@
 Ход работы:
 
 1. Подключение двух специальных ML агентов с диска(установлены ранее с облака) 
-// скрин 1 
+![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
 
 2. Создадие виртуального окружения и установка в него mlagents 0.28.0 и torch 1.7.1
-// скрин 2
+![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
 
 3. Создание 3 объектов и двух ассетов(материалов), измнение их цвета и координат
-//скрин 3
+![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
 
 4. Написание скрипта
 ```c#
@@ -111,6 +111,10 @@ public class RollerAgent : Agent
     }
 }
 ```
+5. Добавление компонентов сфере
+![Alt text](https://github.com/Maksimyska/DA-in-GameDev-lab1/blob/main/%D0%9C%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%20%D0%BB%D0%B0%D0%B1%D0%B0%203/screen/screen_one.jpg)
+
+6.
 ## Задание 2
 ### Реализовать запись в Google-таблицу набора данных, полученных с помощью линейной регрессии из лабораторной работы № 1
 
