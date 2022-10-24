@@ -44,13 +44,13 @@
 Ход работы:
 
 1. Подключение двух специальных ML агентов с диска(установлены ранее с облака) 
-![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
+![Alt text](https://github.com/Maksimyska/DA-in-GameDev-lab1/blob/main/%D0%9C%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%20%D0%BB%D0%B0%D0%B1%D0%B0%203/screen/screen_one.jpg)
 
 2. Создадие виртуального окружения и установка в него mlagents 0.28.0 и torch 1.7.1
-![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
+![Alt text](https://github.com/Maksimyska/DA-in-GameDev-lab1/blob/main/%D0%9C%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%20%D0%BB%D0%B0%D0%B1%D0%B0%203/screen/screen_two.jpg)
 
 3. Создание 3 объектов и двух ассетов(материалов), измнение их цвета и координат
-![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
+![Alt text](https://github.com/Maksimyska/DA-in-GameDev-lab1/blob/main/%D0%9C%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%20%D0%BB%D0%B0%D0%B1%D0%B0%203/screen/screen_three.jpg)
 
 4. Написание скрипта
 ```c#
@@ -112,175 +112,18 @@ public class RollerAgent : Agent
 }
 ```
 5. Добавление компонентов сфере
-![Alt text](https://github.com/Maksimyska/DA-in-GameDev-lab1/blob/main/%D0%9C%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%20%D0%BB%D0%B0%D0%B1%D0%B0%203/screen/screen_one.jpg)
+![Alt text](https://github.com/Maksimyska/DA-in-GameDev-lab1/blob/main/%D0%9C%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%20%D0%BB%D0%B0%D0%B1%D0%B0%203/screen/screen_four.jpg)
 
 6.
 ## Задание 2
 ### Реализовать запись в Google-таблицу набора данных, полученных с помощью линейной регрессии из лабораторной работы № 1
 
-Исходный код:
-```py
-import gspread
-import numpy as np
 
-x = [3, 21, 22, 34, 54, 34, 55, 67, 89, 99]
-x = np.array(x)
-y = [2, 22, 24, 65, 79, 82, 55, 130, 150, 199]
-y = np.array(y)
-
-def model(a, b, x):
-    return a * x + b
-
-def loss_function(a, b, x, y):
-    num = len(x)
-    prediction = model(a, b, x)
-
-    return (0.5 / num) * (np.square(prediction - y)).sum()
-
-def optimize(a, b, x, y):
-    num = len(x)
-    prediction = model(a, b, x)
-
-    da = (1.0 / num) * ((prediction - y) * x).sum()
-    db = (1.0 / num) * ((prediction - y).sum())
-    a = a - Lr * da
-    b = b - Lr * db
-
-    return a, b
-
-def iterate(a, b, x, y, times):
-    for i in range(times):
-        a, b = optimize(a, b, x, y)
-    return a, b
-
-a = np.random.rand(1)
-b = np.random.rand(1)
-
-Lr = 0.000001
-
-gc = gspread.service_account(filename='unitydatasciencekhamoyan-51bea556ee29.json')
-sh = gc.open("Regress")
-
-old_loss = 0
-
-for i in range(10):
-    a, b = iterate(a, b, x, y, 100 * (i + 1))
-
-    prediction = model(a, b, x)
-    loss = loss_function(a, b, x, y)
-
-    diff_loss = abs(loss - old_loss)
-    old_loss = loss
-
-    sh.sheet1.update(('A' + str(i + 1)), str(i + 1))
-    sh.sheet1.update(('B' + str(i + 1)), str(loss))
-    sh.sheet1.update(('C' + str(i + 1)), str(diff_loss))
-```
-
-Тут действия аналогичные предыдщуему задания, но тут повторение происходит 10 раз с шагом в 100(100 итераций, 200, 300, ..., 1000) В таблицу загружается разница каждого повтоерния(модуль разницы loss и предыдущей loss)
-
-![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-47-45.png)
 
 ## Задание 3
 ### Самостоятельно разработать сценарий воспроизведения звукового сопровождения в Unity в зависимости от изменения считанных данных в задании 2
 
-После небольших махинаций с кодом(изменение условия выполнения запуска аудио) происходит следущее
 
-![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
-
-Ну и как же без кода?
-```C#
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Networking;
-using SimpleJSON;
-
-public class NewBehaviourScript : MonoBehaviour
-{   
-    public AudioClip goodSpeak;
-    public AudioClip normalSpeak;
-    public AudioClip badSpeak;
-    private AudioSource selectAudio;
-    private Dictionary<string,float> dataSet = new Dictionary<string, float>();
-    private bool statusStart = false;
-    private int i = 1;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        StartCoroutine(GoogleSheets());
-    }
-
-    // Update is called once per frame
-    void Update()
-    {   
-        if (i > dataSet.Count) {
-            return;
-        }
-
-        if (dataSet["iter_" + i.ToString()] > 1000 & statusStart == false & i <= dataSet.Count){
-            StartCoroutine(PlaySelectAudioBad());
-            Debug.Log(dataSet["iter_" + i.ToString()] + " " + i.ToString());
-        }
-
-        if (dataSet["iter_" + i.ToString()] < 1000 & dataSet["iter_" + i.ToString()] > 100 & statusStart == false & i <= dataSet.Count){
-            StartCoroutine(PlaySelectAudioNormal());
-            Debug.Log(dataSet["iter_" + i.ToString()] + " " + i.ToString());
-        }
-
-        if (dataSet["iter_" + i.ToString()] < 100 & statusStart == false & i <= dataSet.Count){
-            StartCoroutine(PlaySelectAudioGood());
-            Debug.Log(dataSet["iter_" + i.ToString()] + " " + i.ToString());
-        }
-    }
-
-    IEnumerator GoogleSheets()
-    {   
-        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1RSPPF-ez4t3ongewW7rC87CyTVH-7CghSiWId_14ZpE/values/Лист1?key=AIzaSyALnyqcFxEbNzN3MUCdXNWZLDEHfJrR_Lc");
-        yield return curentResp.SendWebRequest();
-        string rawResp = curentResp.downloadHandler.text;
-        var rawJson = JSON.Parse(rawResp);
-        foreach (var itemRawJson in rawJson["values"])
-        {
-            var parseJson = JSON.Parse(itemRawJson.ToString());
-            var selectRow = parseJson[0].AsStringList;
-            dataSet.Add(("iter_" + selectRow[0]), float.Parse(selectRow[2]));
-        }
-    }
-
-    IEnumerator PlaySelectAudioGood()
-    {
-        statusStart = true;
-        selectAudio = GetComponent<AudioSource>();
-        selectAudio.clip = goodSpeak;
-        selectAudio.Play();
-        yield return new WaitForSeconds(3);
-        statusStart = false;
-        i++;
-    }
-    IEnumerator PlaySelectAudioNormal()
-    {
-        statusStart = true;
-        selectAudio = GetComponent<AudioSource>();
-        selectAudio.clip = normalSpeak;
-        selectAudio.Play();
-        yield return new WaitForSeconds(3);
-        statusStart = false;
-        ++i;
-    }
-    IEnumerator PlaySelectAudioBad()
-    {
-        statusStart = true;
-        selectAudio = GetComponent<AudioSource>();
-        selectAudio.clip = badSpeak;
-        selectAudio.Play();
-        yield return new WaitForSeconds(4);
-        statusStart = false;
-        i++;
-    }
-}
-```
 
 ## Выводы
 
