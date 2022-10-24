@@ -1,2 +1,297 @@
-# DA-in-GameDev-lab1
-Шаблон отчета по лабораторной работе #1 курса "Анализ данных [в ГеймДеве] в примерах и задачах"
+# DA-in-GameDev-lab3
+
+##Разработка системы машинного обучения
+Отчет по лабораторной работе #3 выполнил(а):
+- Хамоян Максим Ираклиевич
+- РИ210946
+Отметка о выполнении заданий (заполняется студентом):
+
+| Задание | Выполнение | Баллы |
+| ------ | ------ | ------ |
+| Задание 1 | * | 60 |
+| Задание 2 | * | 20 |
+| Задание 3 | * | 20 |
+
+знак "*" - задание выполнено; знак "#" - задание не выполнено;
+
+Работу проверили:
+- к.т.н., доцент Денисов Д.В.
+- к.э.н., доцент Панов М.А.
+- ст. преп., Фадеев В.О.
+
+[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
+
+[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+
+Структура отчета
+
+- Данные о работе: название работы, фио, группа, выполненные задания.
+- Цель работы.
+- Задание 1.
+- Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
+- Задание 2.
+- Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
+- Задание 3.
+- Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
+- Выводы.
+- ✨Magic ✨
+
+## Цель работы
+Познакомиться с программными средствами для создания системы машинного обучения и ее интеграции в Unity.
+
+## Задание 1
+### Реализовать систему машинного обучения в связке Python - Google-Sheets – Unity
+Ход работы:
+
+1. Подключение двух специальных ML агентов с диска(установлены ранее с облака) 
+// скрин 1 
+
+2. Создадие виртуального окружения и установка в него mlagents 0.28.0 и torch 1.7.1
+// скрин 2
+
+3. Создание 3 объектов и двух ассетов(материалов), измнение их цвета и координат
+//скрин 3
+
+4. Написание скрипта
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
+using Unity.MLAgents.Actuators;
+
+public class RollerAgent : Agent
+{
+    Rigidbody rBody;
+    // Start is called before the first frame update
+    void Start()
+    {
+        rBody = GetComponent<Rigidbody>();
+    }
+
+    public Transform Target;
+    public override void OnEpisodeBegin()
+    {
+        if (this.transform.localPosition.y < 0)
+        {
+            this.rBody.angularVelocity = Vector3.zero;
+            this.rBody.velocity = Vector3.zero;
+            this.transform.localPosition = new Vector3(0, 0.5f, 0);
+        }
+
+        Target.localPosition = new Vector3(Random.value * 8-4, 0.5f, Random.value * 8-4);
+    }
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        sensor.AddObservation(Target.localPosition);
+        sensor.AddObservation(this.transform.localPosition);
+        sensor.AddObservation(rBody.velocity.x);
+        sensor.AddObservation(rBody.velocity.z);
+    }
+    public float forceMultiplier = 10;
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+    {
+        Vector3 controlSignal = Vector3.zero;
+        controlSignal.x = actionBuffers.ContinuousActions[0];
+        controlSignal.z = actionBuffers.ContinuousActions[1];
+        rBody.AddForce(controlSignal * forceMultiplier);
+
+        float distanceToTarget = Vector3.Distance(this.transform.localPosition, Target.localPosition);
+
+        if(distanceToTarget < 1.42f)
+        {
+            SetReward(1.0f);
+            EndEpisode();
+        }
+        else if (this.transform.localPosition.y < 0)
+        {
+            EndEpisode();
+        }
+    }
+}
+```
+## Задание 2
+### Реализовать запись в Google-таблицу набора данных, полученных с помощью линейной регрессии из лабораторной работы № 1
+
+Исходный код:
+```py
+import gspread
+import numpy as np
+
+x = [3, 21, 22, 34, 54, 34, 55, 67, 89, 99]
+x = np.array(x)
+y = [2, 22, 24, 65, 79, 82, 55, 130, 150, 199]
+y = np.array(y)
+
+def model(a, b, x):
+    return a * x + b
+
+def loss_function(a, b, x, y):
+    num = len(x)
+    prediction = model(a, b, x)
+
+    return (0.5 / num) * (np.square(prediction - y)).sum()
+
+def optimize(a, b, x, y):
+    num = len(x)
+    prediction = model(a, b, x)
+
+    da = (1.0 / num) * ((prediction - y) * x).sum()
+    db = (1.0 / num) * ((prediction - y).sum())
+    a = a - Lr * da
+    b = b - Lr * db
+
+    return a, b
+
+def iterate(a, b, x, y, times):
+    for i in range(times):
+        a, b = optimize(a, b, x, y)
+    return a, b
+
+a = np.random.rand(1)
+b = np.random.rand(1)
+
+Lr = 0.000001
+
+gc = gspread.service_account(filename='unitydatasciencekhamoyan-51bea556ee29.json')
+sh = gc.open("Regress")
+
+old_loss = 0
+
+for i in range(10):
+    a, b = iterate(a, b, x, y, 100 * (i + 1))
+
+    prediction = model(a, b, x)
+    loss = loss_function(a, b, x, y)
+
+    diff_loss = abs(loss - old_loss)
+    old_loss = loss
+
+    sh.sheet1.update(('A' + str(i + 1)), str(i + 1))
+    sh.sheet1.update(('B' + str(i + 1)), str(loss))
+    sh.sheet1.update(('C' + str(i + 1)), str(diff_loss))
+```
+
+Тут действия аналогичные предыдщуему задания, но тут повторение происходит 10 раз с шагом в 100(100 итераций, 200, 300, ..., 1000) В таблицу загружается разница каждого повтоерния(модуль разницы loss и предыдущей loss)
+
+![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-47-45.png)
+
+## Задание 3
+### Самостоятельно разработать сценарий воспроизведения звукового сопровождения в Unity в зависимости от изменения считанных данных в задании 2
+
+После небольших махинаций с кодом(изменение условия выполнения запуска аудио) происходит следущее
+
+![Alt text](https://github.com/Maksimyska/screen/blob/main/image_2022-10-05_20-52-31.png)
+
+Ну и как же без кода?
+```C#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using SimpleJSON;
+
+public class NewBehaviourScript : MonoBehaviour
+{   
+    public AudioClip goodSpeak;
+    public AudioClip normalSpeak;
+    public AudioClip badSpeak;
+    private AudioSource selectAudio;
+    private Dictionary<string,float> dataSet = new Dictionary<string, float>();
+    private bool statusStart = false;
+    private int i = 1;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        StartCoroutine(GoogleSheets());
+    }
+
+    // Update is called once per frame
+    void Update()
+    {   
+        if (i > dataSet.Count) {
+            return;
+        }
+
+        if (dataSet["iter_" + i.ToString()] > 1000 & statusStart == false & i <= dataSet.Count){
+            StartCoroutine(PlaySelectAudioBad());
+            Debug.Log(dataSet["iter_" + i.ToString()] + " " + i.ToString());
+        }
+
+        if (dataSet["iter_" + i.ToString()] < 1000 & dataSet["iter_" + i.ToString()] > 100 & statusStart == false & i <= dataSet.Count){
+            StartCoroutine(PlaySelectAudioNormal());
+            Debug.Log(dataSet["iter_" + i.ToString()] + " " + i.ToString());
+        }
+
+        if (dataSet["iter_" + i.ToString()] < 100 & statusStart == false & i <= dataSet.Count){
+            StartCoroutine(PlaySelectAudioGood());
+            Debug.Log(dataSet["iter_" + i.ToString()] + " " + i.ToString());
+        }
+    }
+
+    IEnumerator GoogleSheets()
+    {   
+        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1RSPPF-ez4t3ongewW7rC87CyTVH-7CghSiWId_14ZpE/values/Лист1?key=AIzaSyALnyqcFxEbNzN3MUCdXNWZLDEHfJrR_Lc");
+        yield return curentResp.SendWebRequest();
+        string rawResp = curentResp.downloadHandler.text;
+        var rawJson = JSON.Parse(rawResp);
+        foreach (var itemRawJson in rawJson["values"])
+        {
+            var parseJson = JSON.Parse(itemRawJson.ToString());
+            var selectRow = parseJson[0].AsStringList;
+            dataSet.Add(("iter_" + selectRow[0]), float.Parse(selectRow[2]));
+        }
+    }
+
+    IEnumerator PlaySelectAudioGood()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = goodSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioNormal()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = normalSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        ++i;
+    }
+    IEnumerator PlaySelectAudioBad()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = badSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(4);
+        statusStart = false;
+        i++;
+    }
+}
+```
+
+## Выводы
+
+Получил дейтсвительно хороший навык - запись данных в Google Sheets при помощи библиотеки gspread, которые после обрабатывал при помощи Unity и анализировал
+
+| Plugin | README |
+| ------ | ------ |
+| Dropbox | [plugins/dropbox/README.md][PlDb] |
+| GitHub | [plugins/github/README.md][PlGh] |
+| Google Drive | [plugins/googledrive/README.md][PlGd] |
+| OneDrive | [plugins/onedrive/README.md][PlOd] |
+| Medium | [plugins/medium/README.md][PlMe] |
+| Google Analytics | [plugins/googleanalytics/README.md][PlGa] |
+
+## Powered by
+
+**BigDigital Team: Denisov | Fadeev | Panov**
+
