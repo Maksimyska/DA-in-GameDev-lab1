@@ -89,7 +89,7 @@ public class Perceptron : MonoBehaviour
 
     void Start()
     {
-        Train(4);
+        Train(6);
         Debug.Log("Test 0 0: " + CalcOutput(0, 0));
         Debug.Log("Test 0 1: " + CalcOutput(0, 1));
         Debug.Log("Test 1 0: " + CalcOutput(1, 0));
